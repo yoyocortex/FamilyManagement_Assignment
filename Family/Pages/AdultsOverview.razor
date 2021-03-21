@@ -1,0 +1,222 @@
+@page "/AdultsOverview"
+@using Family.Models
+@using FileData
+
+@inject IFileContextAdapter fileContextAdapter
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<h3>Adult Overview</h3>
+
+<p>Filter by:</p>
+
+<div style="float: left; padding-bottom: 10px; padding-right: 10px;">
+    <select class="form-control selectpicker" @onchange="@((arg) => FilterBy(arg))" style="width:auto; height: 30px;">
+        <option>ID</option> <option>Other</option>
+    </select>
+</div>
+
+@if (filterBy.Equals("ID"))
+{
+    <input style="height: 30px; width: 50px;" type="number" @oninput="@((arg) => FilterByUserId(arg))"/>
+}
+else
+{
+    <div style="float: left; padding-bottom: 10px; padding-right: 10px;">
+        <input style="width: auto; height: 30px;" type="text" @bind-value="filter">
+    </div>
+    <div style="float: left; padding-bottom: 10px;">
+        <a class="buttonFilter" href="/AdultsOverview" @onclick="ExecuteFilter">
+            Filter
+        </a>
+    </div>
+}
+
+<br><br>
+
+@if (adultsToShow == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else if (!adultsToShow.Any())
+{
+    <p>
+        <em>No ToDo items exist. Please add some.</em>
+    </p>
+}
+else
+{
+    <div id="wrapper">
+        <div id="first">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Adult ID</th> <th>Firstname</th> <th>Lastname</th> <th style="width: 100px;">Extra Info</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in adultsToShow)
+                {
+                    <tr>
+                        <td>@(item.Id + 1)</td> <td>@item.FirstName</td> <td>@item.LastName</td>
+                        <td style=" text-align: center;">
+                            <button @onclick="@(() => setExtraInfo(item.Id))">
+                                <i class="oi oi-pencil" style="color:#1b6ec2"/>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        @if (extraInfoButton)
+        {
+            <div id="second">
+                <table id="extraTable">
+                    <thead>
+                    <tr>
+                        <th colspan="2" style="text-align: center;">Extra Information</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <th style="text-align: left; padding: 8px; background-color: #f2f2f2;">Adult ID</th>
+                        <td style="text-align: left; padding: 8px; background-color: #f2f2f2;">@(adults[extraInfoId].Id + 1)</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left; padding: 8px;">Full name</th>
+                        <td style="text-align: left; padding: 8px;">@adults[extraInfoId].FirstName @adults[extraInfoId].LastName</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left; padding: 8px; background-color: #f2f2f2;">Gender</th>
+                        <td style="text-align: left; padding: 8px; background-color: #f2f2f2;">@adults[extraInfoId].Sex</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left; padding: 8px;">Hight</th>
+                        <td style="text-align: left; padding: 8px;">@adults[extraInfoId].Height cm</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left; padding: 8px; background-color: #f2f2f2;">Weight</th>
+                        <td style="text-align: left; padding: 8px; background-color: #f2f2f2;">@adults[extraInfoId].Weight kg</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left; padding: 8px;">Age</th>
+                        <td style="text-align: left; padding: 8px;">@adults[extraInfoId].Age</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left; padding: 8px; background-color: #f2f2f2;">Hair color</th>
+                        <td style="text-align: left; padding: 8px; background-color: #f2f2f2;">@adults[extraInfoId].HairColor</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left; padding: 8px;">Eye color</th>
+                        <td style="text-align: left; padding: 8px;">@adults[extraInfoId].EyeColor</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left; padding: 8px; background-color: #f2f2f2;">Job title</th>
+                        <td style="text-align: left; padding: 8px; background-color: #f2f2f2;">@adults[extraInfoId].JobTitle.JobTitle</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left; padding: 8px;>">Job salary</th>
+                        <td style="text-align: left; padding: 8px;>">@adults[extraInfoId].JobTitle.Salary dkk</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@code {
+
+    private IList<Adult> adults = new List<Adult>();
+    private IList<Adult> adultsToShow;
+    private int extraInfoId, lastExtraInfoButton;
+    private bool extraInfoButton = false;
+    private string filter = "", filterBy = "ID";
+
+    protected override async Task OnInitializedAsync()
+    {
+        adults = fileContextAdapter.GetAllAdults();
+        adultsToShow = adults;
+    }
+
+    public void setExtraInfo(int id)
+    {
+        try
+        {
+            extraInfoId = id;
+            if (lastExtraInfoButton != extraInfoId)
+            {
+                extraInfoButton = true;
+            }
+            else if (lastExtraInfoButton == extraInfoId)
+            {
+                extraInfoButton = !extraInfoButton;
+            }
+            lastExtraInfoButton = extraInfoId;
+        }
+        catch (Exception e)
+        {
+    // ignored
+        }
+    }
+
+    private int? filterById;
+
+    private void FilterByUserId(ChangeEventArgs changeEventArgs)
+    {
+        filterById = null;
+        try
+        {
+            extraInfoButton = false;
+            filterById = int.Parse(changeEventArgs.Value.ToString()) - 1;
+
+            if (filterById < 0)
+                filterById = null;
+
+            if (filterById != null && filterById > 0)
+            {
+                int fix = int.Parse(filterById.ToString());
+                extraInfoId = fix;
+            }
+        }
+        catch (Exception e)
+        {
+    // ignored
+        }
+        ExecuteFilter();
+    }
+
+    private void FilterBy(ChangeEventArgs changeEventArgs)
+    {
+        adultsToShow = adults;
+        filterById = 0;
+        filter = "";
+        filterBy = changeEventArgs.Value.ToString();
+    }
+
+    private void ExecuteFilter()
+    {
+        if (filterBy.Equals("ID"))
+        {
+            adultsToShow = adults.Where(a => (filterById != null && a.Id == filterById || filterById == null)).ToList();
+        }
+        else
+        {
+            adultsToShow = adults.Where(a =>
+                (!filter.Equals("") && a.FirstName == filter || filter.Equals(""))
+                || (!filter.Equals("") && a.LastName == filter || filter.Equals(""))
+                || (!filter.Equals("") && a.Sex == filter || filter.Equals(""))
+                || (!filter.Equals("") && a.Height.ToString() == filter || filter.Equals(""))
+                || (!filter.Equals("") && a.Weight.ToString() == filter || filter.Equals(""))
+                || (!filter.Equals("") && a.EyeColor == filter || filter.Equals(""))
+                || (!filter.Equals("") && a.HairColor == filter || filter.Equals(""))
+                || (!filter.Equals("") && a.Age.ToString() == filter || filter.Equals(""))
+                || (!filter.Equals("") && a.JobTitle.JobTitle == filter || filter.Equals(""))
+                || (!filter.Equals("") && a.JobTitle.Salary.ToString() == filter || filter.Equals(""))).ToList();
+        }
+    }
+
+}

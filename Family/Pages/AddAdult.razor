@@ -1,0 +1,82 @@
+@page "/AddAdult"
+
+@using FileData
+@using Family.Models
+@inject IFileContextAdapter fileContextAdapter
+@inject NavigationManager NavigationManager
+
+<h3>Add Adult</h3>
+
+<label>First name</label>
+<input type="text" @bind-value="firstName"> <br>
+
+<label>Last name</label>
+<input type="text" @bind-value="lastName"> <br>
+
+<label>Sex</label>
+<input type="text" @bind-value="sex"> <br>
+
+<label>Age</label>
+<input type="text" @bind-value="age"> <br>
+
+<label>Hair color</label>
+<input type="text" @bind-value="hairColor"> <br>
+
+<label>Eye color</label>
+<input type="text" @bind-value="eyeColor"> <br>
+
+<label>Height</label>
+<input type="text" @bind-value="height"> <br>
+
+<label>Weight</label>
+<input type="text" @bind-value="weight"> <br>
+
+<label>Job title</label>
+<input type="text" @bind-value="jobTitle"> <br>
+
+<label>Job salary</label>
+<input type="text" @bind-value="jobSalary"> <br>
+
+<button class="button" @onclick="() => OnClick()">Create Adult</button>
+
+@code {
+    private string firstName, lastName, sex, age, hairColor, eyeColor, height, weight, jobTitle, jobSalary;
+
+
+    private void OnClick()
+    {
+        Job newJob = new Job();
+        newJob.JobTitle = jobTitle;
+        newJob.Salary = int.Parse(jobSalary);
+
+        Adult newAdult = new Adult();
+        newAdult.FirstName = firstName;
+        newAdult.LastName = lastName;
+        newAdult.Sex = sex;
+        newAdult.Age = int.Parse(age);
+        newAdult.HairColor = hairColor;
+        newAdult.EyeColor = eyeColor;
+        newAdult.Height = int.Parse(height);
+        newAdult.Weight = int.Parse(weight);
+        newAdult.JobTitle = newJob;
+
+        IList<Adult> allAdults = fileContextAdapter.GetAllAdults();
+
+        newAdult.Id = allAdults.Last().Id + 1;
+
+        fileContextAdapter.AddAnAdult(newAdult);
+
+        firstName = "";
+        lastName = "";
+        sex = "";
+        age = "";
+        hairColor = "";
+        eyeColor = "";
+        height = "";
+        weight = "";
+        jobTitle = "";
+        jobSalary = "";
+        
+        NavigationManager.NavigateTo("/AdultsOverview");
+    }
+}
